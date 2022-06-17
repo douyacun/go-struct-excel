@@ -88,7 +88,7 @@ func TestNewExcel(t *testing.T) {
 
 func TestParseExcelHeaderTag(t *testing.T) {
 	f := foo{
-		Name: "刘宁",
+		Name: "douyacun",
 	}
 
 	val := reflect.ValueOf(f)
