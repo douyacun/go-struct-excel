@@ -1,4 +1,4 @@
-package go_struct_excel
+package structexcel
 
 import (
 	"bytes"
@@ -98,7 +98,7 @@ func (e *Excel) SaveAs(filepath string) error {
 }
 
 // AddSheet 添加sheet
-func (e *Excel) AddSheet(name string) (*Sheet, error) {
+func (e *Excel) AddSheet(name string) *Sheet {
 	index := e.File.NewSheet(name)
 	if e.activeSheet == -1 {
 		e.File.SetActiveSheet(index)
@@ -112,7 +112,7 @@ func (e *Excel) AddSheet(name string) (*Sheet, error) {
 		row:              0,
 		col:              0,
 		header:           make(excelHeaderSlice, 0),
-	}, nil
+	}
 }
 
 func (e *Excel) OpenSheet(sheetName string) (*Sheet, error) {
@@ -156,8 +156,8 @@ type Sheet struct {
 	Excel     *excelize.File
 	SheetName string
 
-	header excelHeaderSlice
-	index  int // sheet index
+	header           excelHeaderSlice
+	index            int // sheet index
 	autoCreateHeader bool
 	hasRemarks       bool
 	row              int
@@ -686,4 +686,3 @@ func (s *Sheet) filterEmpty(rows [][]string) [][]string {
 
 	return res
 }
-

@@ -1,4 +1,4 @@
-package go_struct_excel
+package structexcel
 
 import "reflect"
 

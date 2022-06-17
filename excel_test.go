@@ -1,4 +1,4 @@
-package go_struct_excel
+package structexcel
 
 import (
 	"fmt"
@@ -34,19 +34,12 @@ func (f foo) Remarks() (string, float64, float64) {
 .导入规则：
 .全局名称不允许重复			
 .各种包含类型枚举：可为空表示不定向，或输入：不限、包含、不包含			
-.小时定向：周一到周六枚举：0~6，周日枚举值0，如定向周日22、23点，周二0、1点，格式 0:22,23|2:0,1			
-.媒体平台：VendorName，请输入全称			
-.流量定向：请输入ID`, 150, 85
+`, 100, 85
 }
 
 func TestNewExcel(t *testing.T) {
 	excel := NewExcel()
 	defer excel.File.Close()
-	sheet, err := excel.AddSheet("hello")
-	if err != nil {
-		t.Error(err)
-		return
-	}
 	// 1994-05-25
 	data := make([]*foo, 0)
 	age := 28
@@ -72,12 +65,12 @@ func TestNewExcel(t *testing.T) {
 		},
 	})
 
-	if err = sheet.AddData(data); err != nil {
+	if err := excel.AddSheet("hello").AddData(data); err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err = excel.SaveAs("helloword"); err != nil {
+	if err := excel.SaveAs("helloword"); err != nil {
 		t.Errorf("文件保存失败: %s", err.Error())
 		return
 	}
