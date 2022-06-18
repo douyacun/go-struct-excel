@@ -14,7 +14,7 @@ import (
 )
 
 type ExcelRemarks interface {
-	Remarks() (remark string, rowHeight, colWidth float64)
+	Remarks() (remark string, row, col int)
 }
 
 type ExcelGatherHeader interface {
@@ -342,15 +342,14 @@ func (s *Sheet) AddHeader(data interface{}) error {
 	return nil
 }
 
-func (s *Sheet) AddRemark(remark string, rowHeight, colWidth float64) error {
-	s.addRow()
-	if err := s.Excel.SetRowHeight(s.SheetName, 1, rowHeight); err != nil {
+func (s *Sheet) AddRemark(remark string, row, col int) error {
+	s.addRow(row)
+	axis, err := s.axis(row, col)
+	if err != nil {
 		return err
 	}
-	if err := s.Excel.SetColWidth(s.SheetName, "A", "A", colWidth); err != nil {
-		return err
-	}
-	if err := s.Excel.SetCellValue(s.SheetName, "A1", remark); err != nil {
+	s.Excel.MergeCell(s.SheetName, "A1", axis)
+	if err = s.Excel.SetCellValue(s.SheetName, "A1", remark); err != nil {
 		return err
 	}
 	s.hasRemarks = true
@@ -363,7 +362,7 @@ func (s *Sheet) AddRemark(remark string, rowHeight, colWidth float64) error {
 	}); err != nil {
 		return nil
 	} else {
-		return s.Excel.SetCellStyle(s.SheetName, "A1", "A1", style)
+		return s.Excel.SetCellStyle(s.SheetName, "A1", axis, style)
 	}
 }
 
