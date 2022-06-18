@@ -152,6 +152,19 @@ func (e *Excel) GetSheetMap() map[int]string {
 	return e.File.GetSheetMap()
 }
 
+func (e Excel) Response(w http.ResponseWriter) error {
+	header := w.Header()
+
+	header["Content-Type"] = []string{"application/vnd.ms-excel"}
+
+	byt, err := e.Bytes()
+	if err != nil {
+		return err
+	}
+	w.Write(byt)
+	return nil
+}
+
 type Sheet struct {
 	Excel     *excelize.File
 	SheetName string
