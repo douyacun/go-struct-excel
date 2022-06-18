@@ -44,7 +44,6 @@ func (f foo) Remarks() (string, int, int) {
 func TestNewExcel(t *testing.T) {
 	excel := NewExcel()
 	defer excel.File.Close()
-	// 1994-05-25
 	data := make([]*foo, 0)
 	age := 28
 	data = append(data, &foo{

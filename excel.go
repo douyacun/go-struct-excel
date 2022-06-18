@@ -25,13 +25,15 @@ type ExcelGatherHeader interface {
 type Excel struct {
 	File        *excelize.File
 	activeSheet int
+	Filename    string
 }
 
-func NewExcel() *Excel {
+func NewExcel(filename string) *Excel {
 	f := excelize.NewFile()
 	return &Excel{
 		File:        f,
 		activeSheet: -1,
+		Filename:    filename,
 	}
 }
 
@@ -152,15 +154,17 @@ func (e *Excel) GetSheetMap() map[int]string {
 	return e.File.GetSheetMap()
 }
 
-func (e Excel) Response(w http.ResponseWriter) error {
+func (e *Excel) Response(w http.ResponseWriter) error {
 	header := w.Header()
-
-	header["Content-Type"] = []string{"application/vnd.ms-excel"}
 
 	byt, err := e.Bytes()
 	if err != nil {
 		return err
 	}
+	header["Accept-Length"] = []string{strconv.Itoa(len(byt))}
+	header["Content-Type"] = []string{"application/vnd.ms-excel"}
+	header["Access-Control-Expose-Headers"] = []string{"Content-Disposition"}
+	header["Content-Disposition"] = []string{fmt.Sprintf("attachment; filename=\"%s\"", e.Filename)}
 	w.Write(byt)
 	return nil
 }
