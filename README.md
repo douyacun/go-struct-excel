@@ -67,19 +67,46 @@ func (f foo) Remarks() (string, int, int) {
 package main
 
 func TestNewExcel(t *testing.T) {
-	if err := excel.AddSheet("hello").AddData(data); err != nil {
-		t.Error(err)
-		return
-	}
+  excel := NewExcel("helloworld.xlsx")
+  defer excel.File.Close()
+  data := make([]*foo, 0)
+  age := 28
+  data = append(data, &foo{
+    Name:   "h",
+    Age:    &age,
+    Height: 181,
+    Holiday: map[string]bool{
+      "2022-01-27": false,
+      "2022-01-28": true,
+      "2022-01-29": true,
+    },
+  }, &foo{
+    Name:   "o",
+    Age:    &age,
+    Height: 182,
+    Holiday: map[string]bool{
+      "2022-01-27": true,
+      "2022-01-28": true,
+      "2022-01-30": true,
+      "2022-02-09": true,
+      "2022-12-09": true,
+    },
+  })
 
-	if err := excel.SaveAs("helloword"); err != nil {
-		t.Errorf("文件保存失败: %s", err.Error())
-		return
-	}
-	dir, _ := os.Getwd()
-	fmt.Println("当前路径：", dir)
-	return
+  if err := excel.AddSheet("hello").AddData(data); err != nil {
+    t.Error(err)
+    return
+  }
+
+  if err := excel.SaveAs(); err != nil {
+    t.Errorf("文件保存失败: %s", err.Error())
+    return
+  }
+  dir, _ := os.Getwd()
+  fmt.Println("当前路径：", dir)
+  return
 }
+
 ```
 
 http访问直接下载excel:
