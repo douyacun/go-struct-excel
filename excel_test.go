@@ -42,7 +42,7 @@ func (f foo) Remarks() (string, int, int) {
 }
 
 func TestNewExcel(t *testing.T) {
-	excel := NewExcel()
+	excel := NewExcel("helloworld.xlsx")
 	defer excel.File.Close()
 	data := make([]*foo, 0)
 	age := 28
@@ -73,7 +73,7 @@ func TestNewExcel(t *testing.T) {
 		return
 	}
 
-	if err := excel.SaveAs("helloword"); err != nil {
+	if err := excel.SaveAs(); err != nil {
 		t.Errorf("文件保存失败: %s", err.Error())
 		return
 	}

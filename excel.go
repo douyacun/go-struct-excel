@@ -91,9 +91,8 @@ func (e *Excel) Bytes() ([]byte, error) {
 //}
 
 // SaveAs 保存为文件
-func (e *Excel) SaveAs(filepath string) error {
-	filepath = fmt.Sprintf("%s.xlsx", strings.TrimRight(filepath, ".xlsx"))
-	if err := e.File.SaveAs(filepath); err != nil {
+func (e *Excel) SaveAs() error {
+	if err := e.File.SaveAs(e.Filename); err != nil {
 		return err
 	}
 	return nil
