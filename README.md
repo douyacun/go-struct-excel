@@ -196,26 +196,27 @@ GatherHeader(sheet *Sheet) error // 汇总表头合并单元格，单元格样�
 ## 导入用法
 
 ```go
-func TestReadData(t *testing.T) {
-excel, err := OpenExcel("helloword.xlsx")
-if err != nil {
-t.Error(err)
-}
-sheet, err := excel.OpenSheet("hello")
-if err != nil {
-t.Error(err)
-}
-if data, err := sheet.ReadData(foo{}); err != nil {
-t.Error(err)
-} else if d, ok := data.([]*foo); ok {
-if str, err := json.Marshal(d); err != nil {
-t.Error(err)
-} else {
-fmt.Println(string(str))
-}
-}
-}
+package main
 
+func TestReadData(t *testing.T) {
+  excel, err := OpenExcel("helloword.xlsx")
+  if err != nil {
+    t.Error(err)
+  }
+  sheet, err := excel.OpenSheet("hello")
+  if err != nil {
+    t.Error(err)
+  }
+  if data, err := sheet.ReadData(foo{}); err != nil {
+    t.Error(err)
+  } else if d, ok := data.([]*foo); ok {
+    if str, err := json.Marshal(d); err != nil {
+      t.Error(err)
+    } else {
+      fmt.Println(string(str))
+    }
+  }
+}
 ```
 
 输出：
