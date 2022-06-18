@@ -143,26 +143,30 @@ message ExcelResponse {
 ```go
 package main
 
-switch resp.(type) {
-case *commonProto.ExcelResponse:
+import "context"
+
+func handler(ctx context.Context) error {
+  switch resp.(type) {
+  case *commonProto.ExcelResponse:
     return response(ctx.writer, resp.(*commonProto.ExcelResponse))
-default:
+  default:
     return defaultHandle(ctx, req, resp)
+  }
 }
 
 func response(w http.ResponseWriter) error {
-	header := w.Header()
+  header := w.Header()
 
-	byt, err := e.Bytes()
-	if err != nil {
-		return err
-	}
-	header["Accept-Length"] = []string{strconv.Itoa(len(byt))}
-	header["Content-Type"] = []string{"application/vnd.ms-excel"}
-	header["Access-Control-Expose-Headers"] = []string{"Content-Disposition"}
-	header["Content-Disposition"] = []string{fmt.Sprintf("attachment; filename=\"%s\"", e.Filename)}
-	w.Write(byt)
-	return nil
+  byt, err := e.Bytes()
+  if err != nil {
+    return err
+  }
+  header["Accept-Length"] = []string{strconv.Itoa(len(byt))}
+  header["Content-Type"] = []string{"application/vnd.ms-excel"}
+  header["Access-Control-Expose-Headers"] = []string{"Content-Disposition"}
+  header["Content-Disposition"] = []string{fmt.Sprintf("attachment; filename=\"%s\"", e.Filename)}
+  w.Write(byt)
+  return nil
 }
 ```
 
@@ -187,9 +191,11 @@ Remarks() (remark string, row, col int) // 占用几行几列
 汇总表头
 
 ```go
+package main
+
 type ExcelGatherHeader interface {
-GatherHeaderRows() int // 汇总表头占几行，不包括字段行
-GatherHeader(sheet *Sheet) error // 汇总表头合并单元格，单元格样式需要自己实现
+    GatherHeaderRows() int // 汇总表头占几行，不包括字段行
+    GatherHeader(sheet *Sheet) error // 汇总表头合并单元格，单元格样式需要自己实现
 }
 ```
 
