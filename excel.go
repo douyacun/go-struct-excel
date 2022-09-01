@@ -242,6 +242,9 @@ func (s *Sheet) expandHeader(dataValue reflect.Value, index int, col int) int {
 				}
 			}
 		}
+		if field.Kind() == reflect.Slice {
+
+		}
 	}
 	sort.Strings(keyList)
 	header := getElem(dataValue.Index(0))
@@ -339,7 +342,6 @@ func (s *Sheet) AddHeader(data interface{}) error {
 		}
 
 		for _, v := range headerList {
-			//fmt.Printf("%s - %d\n", v.headerName, v.Col)
 			if v.IsSkip() || v.allowEmpty || v.expand {
 				continue
 			}
