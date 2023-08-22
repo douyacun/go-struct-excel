@@ -99,8 +99,11 @@ func (e *Excel) SaveAs() error {
 }
 
 // AddSheet 添加sheet
-func (e *Excel) AddSheet(name string) *Sheet {
-	index := e.File.NewSheet(name)
+func (e *Excel) AddSheet(name string) (*Sheet, error) {
+	index, err := e.File.NewSheet(name)
+	if err != nil {
+		return nil, err
+	}
 	if e.activeSheet == -1 {
 		e.File.SetActiveSheet(index)
 		// 移除默认sheet1，好像没办法重命名sheet
@@ -113,11 +116,14 @@ func (e *Excel) AddSheet(name string) *Sheet {
 		row:              0,
 		col:              0,
 		header:           make(excelHeaderSlice, 0),
-	}
+	}, nil
 }
 
 func (e *Excel) OpenSheet(sheetName string) (*Sheet, error) {
-	index := e.File.GetSheetIndex(sheetName)
+	index, err := e.File.GetSheetIndex(sheetName)
+	if err != nil {
+		return nil, err
+	}
 	if index == -1 {
 		return nil, errors.Errorf("%s sheet缺失", sheetName)
 	}

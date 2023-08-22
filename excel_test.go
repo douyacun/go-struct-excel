@@ -68,12 +68,15 @@ func TestNewExcel(t *testing.T) {
 		},
 	})
 
-	if err := excel.AddSheet("hello").AddData(data); err != nil {
+	sheet, err := excel.AddSheet("hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = sheet.AddData(data); err != nil {
 		t.Error(err)
 		return
 	}
-
-	if err := excel.SaveAs(); err != nil {
+	if err = excel.SaveAs(); err != nil {
 		t.Errorf("文件保存失败: %s", err.Error())
 		return
 	}
