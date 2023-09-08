@@ -1,16 +1,16 @@
 package structexcel
 
 import (
-	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/xuri/excelize/v2"
 	"io"
 	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/xuri/excelize/v2"
 )
 
 type ExcelRemarks interface {
@@ -71,24 +71,24 @@ func (e *Excel) Close() error {
 
 // Bytes 吐字节
 func (e *Excel) Bytes() ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	if err := e.File.Write(buf); err != nil {
+	buf, err := e.File.WriteToBuffer()
+	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
 // Response proto
-//func (e *Excel) Response(filename string) (*commonProto.Excel, error) {
-//	bt, err := e.Bytes()
-//	if err != nil {
-//		return nil, err
-//	}
-//	return &commonProto.Excel{
-//		FileName: filename,
-//		Raw:      bt,
-//	}, nil
-//}
+// func (e *Excel) Response(filename string) (*commonProto.Excel, error) {
+// 	bt, err := e.Bytes()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &commonProto.Excel{
+// 		FileName: filename,
+// 		Raw:      bt,
+// 	}, nil
+// }
 
 // SaveAs 保存为文件
 func (e *Excel) SaveAs() error {
@@ -115,6 +115,7 @@ func (e *Excel) AddSheet(name string) (*Sheet, error) {
 		autoCreateHeader: true,
 		row:              0,
 		col:              0,
+		position:         NewCell(0, 0),
 		header:           make(excelHeaderSlice, 0),
 	}, nil
 }
@@ -132,6 +133,7 @@ func (e *Excel) OpenSheet(sheetName string) (*Sheet, error) {
 		Excel:            e.File,
 		SheetName:        sheetName,
 		autoCreateHeader: false,
+		position:         NewCell(0, 0),
 		row:              0,
 		col:              0,
 	}, nil
@@ -147,6 +149,7 @@ func (e *Excel) OpenSheetByMap(sheetName string) (*Sheet, error) {
 				Excel:            e.File,
 				SheetName:        name,
 				autoCreateHeader: false,
+				position:         NewCell(0, 0),
 				row:              0,
 				col:              0,
 			}, nil
@@ -182,8 +185,140 @@ type Sheet struct {
 	index            int // sheet index
 	autoCreateHeader bool
 	hasRemarks       bool
+	position         *Cell // 表格左上角坐标
 	row              int
 	col              int
+}
+
+type Cell struct {
+	row int
+	col int
+}
+
+func NewCell(row, col int) *Cell {
+	return &Cell{row, col}
+}
+
+func NewCellByName(cellName string) *Cell {
+	colStr, row, err := excelize.SplitCellName(cellName)
+	if err != nil {
+		return nil
+	}
+	col, err := excelize.ColumnNameToNumber(colStr)
+	if err != nil {
+		return nil
+	}
+	return &Cell{row, col}
+}
+
+func (c *Cell) GetRow() int {
+	return c.row
+}
+
+func (c *Cell) SetRow(row int) {
+	c.row = row
+}
+
+func (c *Cell) SetCol(col int) {
+	c.col = col
+}
+
+func (c *Cell) GetCol() int {
+	return c.col
+}
+
+func (s *Sheet) SetPosition(row, col int) {
+	s.position = NewCell(row, col)
+	s.row = 0
+	s.col = 0
+}
+
+func (s *Sheet) Col() int {
+	return s.position.col + s.col
+}
+
+func (s *Sheet) Row() int {
+	return s.position.row + s.row
+}
+
+func (s *Sheet) SetCellStyle(hRow, hCol, vRow, vCol, styleID int) (err error) {
+	hCell, err := s.axis(NewCell(hRow, hCol))
+	if err != nil {
+		return err
+	}
+	vCell, err := s.axis(NewCell(vRow, vCol))
+	if err != nil {
+		return err
+	}
+	return s.Excel.SetCellStyle(s.SheetName, hCell, vCell, styleID)
+}
+
+func (s *Sheet) SetCellStyleByName(hCellName, vCellName string, styleID int) (err error) {
+	hCell, err := s.axis(NewCellByName(hCellName))
+	if err != nil {
+		return err
+	}
+	vCell, err := s.axis(NewCellByName(vCellName))
+	if err != nil {
+		return err
+	}
+	return s.Excel.SetCellStyle(s.SheetName, hCell, vCell, styleID)
+}
+
+func ColumnNameToNumber(colName string) int {
+	_col, err := excelize.ColumnNameToNumber(colName)
+	if err != nil {
+		return 0
+	}
+	return _col
+}
+
+func (s *Sheet) MergeCellByName(hCellName, vCellName string) error {
+	hCell, err := s.axis(NewCellByName(hCellName))
+	if err != nil {
+		return err
+	}
+	vCell, err := s.axis(NewCellByName(vCellName))
+	if err != nil {
+		return err
+	}
+	return s.Excel.MergeCell(s.SheetName, hCell, vCell)
+}
+
+func (s *Sheet) MergeCell(hRow, hCol, vRow, vCol int) error {
+	hCell, err := s.axis(NewCell(hRow, hCol))
+	if err != nil {
+		return err
+	}
+	vCell, err := s.axis(NewCell(vRow, vCol))
+	if err != nil {
+		return err
+	}
+	return s.Excel.MergeCell(s.SheetName, hCell, vCell)
+}
+
+func (s *Sheet) SetCellValueByName(cellName string, val any) error {
+	cell, err := s.axis(NewCellByName(cellName))
+	if err != nil {
+		return err
+	}
+	return s.Excel.SetCellValue(s.SheetName, cell, val)
+}
+
+func (s *Sheet) SetCellValue(row, col int, val any) error {
+	cell, err := s.axis(NewCell(row, col))
+	if err != nil {
+		return err
+	}
+	return s.Excel.SetCellValue(s.SheetName, cell, val)
+}
+
+func (s *Sheet) SetCellRichText(row, col int, runs []excelize.RichTextRun) (err error) {
+	cell, err := s.axis(NewCell(row, col))
+	if err != nil {
+		return err
+	}
+	return s.Excel.SetCellRichText(s.SheetName, cell, runs)
 }
 
 func (s *Sheet) GetIndex() int {
@@ -211,12 +346,12 @@ func (s *Sheet) addCol() *Sheet {
 	return s
 }
 
-func (s *Sheet) axis(row, col int) (string, error) {
-	_col, err := excelize.ColumnNumberToName(col)
+func (s *Sheet) axis(cell *Cell) (string, error) {
+	_col, err := excelize.ColumnNumberToName(cell.col + s.position.col)
 	if err != nil {
 		return "", errors.Wrap(err, "excelize")
 	}
-	return excelize.JoinCellName(_col, row)
+	return excelize.JoinCellName(_col, cell.row+s.position.row)
 }
 
 func (s *Sheet) fieldIsNil(data reflect.Value, index int) bool {
@@ -248,9 +383,9 @@ func (s *Sheet) expandHeader(dataValue reflect.Value, index int, col int) int {
 				}
 			}
 		}
-		if field.Kind() == reflect.Slice {
+		// if field.Kind() == reflect.Slice {
 
-		}
+		// }
 	}
 	sort.Strings(keyList)
 	header := getElem(dataValue.Index(0))
@@ -284,7 +419,7 @@ func (s *Sheet) transferHeaders(data reflect.Value) *Sheet {
 		panic("表头解析支持 struct | slice")
 	}
 	typee := value.Type()
-
+	s.header = make(excelHeaderSlice, 0, len(s.header))
 	for i := 0; i < typee.NumField(); i++ {
 		fieldType := value.Field(i)
 		header := ParseExcelHeaderTag(typee.Field(i).Tag.Get("excel"), col)
@@ -352,11 +487,7 @@ func (s *Sheet) AddHeader(data interface{}) error {
 				continue
 			}
 			s.addCol()
-			axis, err := s.axis(s.row, s.col)
-			if err != nil {
-				return err
-			}
-			if err = s.setCellValue(axis, v, v.headerName); err != nil {
+			if err := s.setCellValue(s.row, s.col, v, v.headerName); err != nil {
 				return err
 			}
 		}
@@ -368,12 +499,8 @@ func (s *Sheet) AddHeader(data interface{}) error {
 
 func (s *Sheet) AddRemark(remark string, row, col int) error {
 	s.addRow(row)
-	axis, err := s.axis(row, col)
-	if err != nil {
-		return err
-	}
-	s.Excel.MergeCell(s.SheetName, "A1", axis)
-	if err = s.Excel.SetCellValue(s.SheetName, "A1", remark); err != nil {
+	s.MergeCell(1, 1, row, col)
+	if err := s.SetCellValue(1, 1, remark); err != nil {
 		return err
 	}
 	s.hasRemarks = true
@@ -386,7 +513,7 @@ func (s *Sheet) AddRemark(remark string, row, col int) error {
 	}); err != nil {
 		return nil
 	} else {
-		return s.Excel.SetCellStyle(s.SheetName, "A1", axis, style)
+		return s.SetCellStyle(1, 1, row, col, style)
 	}
 }
 
@@ -402,11 +529,11 @@ func (s *Sheet) autoAddRemarks(data reflect.Value) error {
 	return nil
 }
 
-func (s *Sheet) setCellValue(axis string, header *excelHeaderField, data interface{}) error {
+func (s *Sheet) setCellValue(row, col int, header *excelHeaderField, data interface{}) error {
 	if header.font == nil {
-		return s.Excel.SetCellValue(s.SheetName, axis, data)
+		return s.SetCellValue(row, col, data)
 	} else {
-		return s.Excel.SetCellRichText(s.SheetName, axis, []excelize.RichTextRun{
+		return s.SetCellRichText(row, col, []excelize.RichTextRun{
 			{
 				Font: header.font,
 				Text: fmt.Sprint(data),
@@ -416,7 +543,7 @@ func (s *Sheet) setCellValue(axis string, header *excelHeaderField, data interfa
 }
 
 // AddData 遍历slice，导出数据
-func (s *Sheet) AddData(data interface{}) error {
+func (s *Sheet) AddData(data any) error {
 	dataType := reflect.TypeOf(data)
 	dataValue := reflect.ValueOf(data)
 	if dataType.Kind() != reflect.Slice {
@@ -424,8 +551,8 @@ func (s *Sheet) AddData(data interface{}) error {
 	}
 
 	if dataValue.Len() == 0 {
-		_ = s.Excel.SetCellValue(s.SheetName, "A1", "没有数据")
-		_ = s.Excel.MergeCell(s.SheetName, "A1", "C1")
+		_ = s.SetCellValueByName("A1", "没有数据")
+		_ = s.MergeCellByName("A1", "B1")
 		return nil
 	}
 
@@ -460,15 +587,13 @@ func (s *Sheet) AddData(data interface{}) error {
 					continue
 				}
 				if !header.expand {
-					axis, _ := s.axis(s.row, header.Col)
-					if err := s.setCellValue(axis, header, value); err != nil {
+					if err := s.setCellValue(s.row, header.Col, header, value); err != nil {
 						return err
 					}
 				} else {
 					for _, key := range value.MapKeys() {
 						if eHeader, ok := headerNameMap[key.String()]; ok {
-							axis, _ := s.axis(s.row, eHeader.Col)
-							if err := s.setCellValue(axis, header, value.MapIndex(key)); err != nil {
+							if err := s.setCellValue(s.row, eHeader.Col, header, value.MapIndex(key)); err != nil {
 								return err
 							}
 						}
@@ -627,8 +752,7 @@ func (s *Sheet) readBody(rows [][]string, data reflect.Value) (interface{}, erro
 				if !field.CanSet() {
 					continue
 				}
-				axis, _ := s.axis(rn+2, col+1)
-
+				axis, _ := s.axis(NewCell(rn+2, col+1))
 				switch field.Kind() {
 				case reflect.Map:
 					if value, err := s.cellToValue(field.Type().Elem(), cell, axis); err != nil {

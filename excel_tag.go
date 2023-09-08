@@ -2,10 +2,11 @@ package structexcel
 
 import (
 	"fmt"
-	"github.com/xuri/excelize/v2"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type excelHeaderField struct {

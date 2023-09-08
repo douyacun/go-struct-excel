@@ -21,14 +21,11 @@ func (f foo) GatherHeaderRows() int {
 
 func (f foo) GatherHeader(sheet *Sheet) error {
 	style, _ := sheet.GetCenterStyle()
-
-	headerLine := "7"
-
-	sheet.Excel.SetCellValue(sheet.SheetName, "A"+headerLine, "个人信息")
-	sheet.Excel.MergeCell(sheet.SheetName, "A"+headerLine, "C"+headerLine)
-	sheet.Excel.SetCellStyle(sheet.SheetName, "A"+headerLine, "C"+headerLine, style)
-	sheet.Excel.SetCellValue(sheet.SheetName, "D"+headerLine, "假期信息")
-	sheet.Excel.MergeCell(sheet.SheetName, "D"+headerLine, "I"+headerLine)
+	sheet.SetCellValueByName("A7", "个人信息")
+	sheet.MergeCellByName("A7", "C7")
+	sheet.SetCellStyleByName("A7", "C7", style)
+	sheet.SetCellValueByName("D7", "假期信息")
+	sheet.MergeCellByName("D7", "I7")
 	return nil
 }
 
@@ -39,6 +36,50 @@ func (f foo) Remarks() (string, int, int) {
 .全局名称不允许重复			
 .各种包含类型枚举：可为空表示不定向，或输入：不限、包含、不包含			
 `, 6, 9
+}
+
+func TestNewPositionExcel(t *testing.T) {
+	excel := NewExcel("position.xlsx")
+	defer excel.File.Close()
+	data := make([]*foo, 0)
+	age := 28
+	data = append(data, &foo{
+		Name:   "h",
+		Age:    &age,
+		Height: 181,
+		Holiday: map[string]bool{
+			"2022-01-27": false,
+			"2022-01-28": true,
+			"2022-01-29": true,
+		},
+	}, &foo{
+		Name:   "o",
+		Age:    &age,
+		Height: 182,
+		Holiday: map[string]bool{
+			"2022-01-27": true,
+			"2022-01-28": true,
+			"2022-01-30": true,
+			"2022-02-09": true,
+			"2022-12-09": true,
+		},
+	})
+
+	sheet, err := excel.AddSheet("hello")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sheet.SetPosition(2, 1)
+	if err = sheet.AddData(data); err != nil {
+		t.Error(err)
+		return
+	}
+	if err = excel.SaveAs(); err != nil {
+		t.Errorf("文件保存失败: %s", err.Error())
+		return
+	}
+	dir, _ := os.Getwd()
+	fmt.Println("当前路径：", dir)
 }
 
 func TestNewExcel(t *testing.T) {
@@ -82,7 +123,6 @@ func TestNewExcel(t *testing.T) {
 	}
 	dir, _ := os.Getwd()
 	fmt.Println("当前路径：", dir)
-	return
 }
 
 func TestParseExcelHeaderTag(t *testing.T) {
@@ -95,7 +135,7 @@ func TestParseExcelHeaderTag(t *testing.T) {
 }
 
 func TestReadData(t *testing.T) {
-	excel, err := OpenExcel("helloword.xlsx")
+	excel, err := OpenExcel("helloworld.xlsx")
 	if err != nil {
 		t.Error(err)
 	}
