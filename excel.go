@@ -566,6 +566,15 @@ func (s *Sheet) cellToValue(field reflect.Type, cell string, axis string) (refle
 			return reflect.Value{}, errors.Wrapf(err, "%s表格(%s)转int32失败", axis, cell)
 		}
 		return reflect.ValueOf(int32(i)), nil
+	case reflect.Uint32:
+		if cell == "" {
+			return reflect.ValueOf(int32(0)), nil
+		}
+		i, err := strconv.ParseInt(cell, 10, 64)
+		if err != nil {
+			return reflect.Value{}, errors.Wrapf(err, "%s表格(%s)转int32失败", axis, cell)
+		}
+		return reflect.ValueOf(uint32(i)), nil
 	case reflect.Int:
 		if cell == "" {
 			return reflect.ValueOf(int(0)), nil
@@ -584,6 +593,15 @@ func (s *Sheet) cellToValue(field reflect.Type, cell string, axis string) (refle
 			return reflect.Value{}, errors.Wrapf(err, "%s表格(%s)转int64失败", axis, cell)
 		}
 		return reflect.ValueOf(i), nil
+	case reflect.Uint64:
+		if cell == "" {
+			return reflect.ValueOf(int64(0)), nil
+		}
+		i, err := strconv.ParseInt(cell, 10, 64)
+		if err != nil {
+			return reflect.Value{}, errors.Wrapf(err, "%s表格(%s)转int64失败", axis, cell)
+		}
+		return reflect.ValueOf(uint64(i)), nil
 	case reflect.Bool:
 		lower := strings.ToLower(cell)
 		if lower == "true" || lower == "1" || lower == "t" {
