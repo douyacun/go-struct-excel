@@ -3,14 +3,15 @@ package structexcel
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/xuri/excelize/v2"
 	"io"
 	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/xuri/excelize/v2"
 )
 
 type ExcelRemarks interface {
@@ -249,7 +250,6 @@ func (s *Sheet) expandHeader(dataValue reflect.Value, index int, col int) int {
 			}
 		}
 		if field.Kind() == reflect.Slice {
-
 		}
 	}
 	sort.Strings(keyList)
@@ -273,7 +273,7 @@ func (s *Sheet) expandHeader(dataValue reflect.Value, index int, col int) int {
 // transferHeaders
 // 展开表头
 func (s *Sheet) transferHeaders(data reflect.Value) *Sheet {
-	//var data reflect.Type
+	// var data reflect.Type
 	col := 1
 	var value reflect.Value
 	if data.Kind() == reflect.Slice {
@@ -475,7 +475,7 @@ func (s *Sheet) AddData(data interface{}) error {
 					}
 				}
 			}
-		//case reflect.Slice:
+		// case reflect.Slice:
 		//	for i := 0; i < valueStruct.Len(); i++ {
 		//		field := valueStruct.Index(i)
 		//		_ = s.addCol().setCellValue(field)
@@ -496,6 +496,7 @@ func (s *Sheet) readHeader(header []string) {
 		cell = strings.TrimSpace(cell)
 		if h, ok := headerMap[cell]; ok {
 			h.Col = col + 1
+			h.isMatch = true
 		} else {
 			for _, v := range expandHeader {
 				if v.expandRegex.MatchString(cell) {
@@ -509,6 +510,7 @@ func (s *Sheet) readHeader(header []string) {
 						expandRegex: nil,
 						skip:        false,
 						level:       2,
+						isMatch:     true,
 					})
 				}
 			}
