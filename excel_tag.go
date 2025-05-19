@@ -2,10 +2,11 @@ package structexcel
 
 import (
 	"fmt"
-	"github.com/xuri/excelize/v2"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type excelHeaderField struct {
@@ -20,6 +21,7 @@ type excelHeaderField struct {
 	level       int
 	split       string
 	font        *excelize.Font
+	isMatch     bool
 }
 
 type excelHeaderNode struct {
@@ -166,7 +168,9 @@ func (x excelHeaderSlice) getExpandHeaderSlice() excelHeaderSlice {
 func (x excelHeaderSlice) getColHeaderMap() map[int]*excelHeaderField {
 	res := make(map[int]*excelHeaderField)
 	for _, v := range x {
-		res[v.Col] = v
+		if v.isMatch {
+			res[v.Col] = v
+		}
 	}
 	return res
 }
