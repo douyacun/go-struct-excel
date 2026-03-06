@@ -22,6 +22,7 @@ type excelHeaderField struct {
 	split       string
 	font        *excelize.Font
 	isMatch     bool
+	link        bool
 }
 
 type excelHeaderNode struct {
@@ -100,6 +101,10 @@ func ParseExcelHeaderTag(tag string, col int) *excelHeaderField {
 					}
 				}
 			}
+		}
+
+		if v == "link" {
+			h.link = true
 		}
 
 		if k == 0 {

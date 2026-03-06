@@ -402,17 +402,24 @@ func (s *Sheet) autoAddRemarks(data reflect.Value) error {
 	return nil
 }
 
-func (s *Sheet) setCellValue(axis string, header *excelHeaderField, data interface{}) error {
+func (s *Sheet) setCellValue(axis string, header *excelHeaderField, data interface{}) (err error) {
 	if header.font == nil {
-		return s.Excel.SetCellValue(s.SheetName, axis, data)
+		err = s.Excel.SetCellValue(s.SheetName, axis, data)
 	} else {
-		return s.Excel.SetCellRichText(s.SheetName, axis, []excelize.RichTextRun{
+		err = s.Excel.SetCellRichText(s.SheetName, axis, []excelize.RichTextRun{
 			{
 				Font: header.font,
 				Text: fmt.Sprint(data),
 			},
 		})
 	}
+	if err != nil {
+		return err
+	}
+	if header.link {
+		err = s.Excel.SetCellHyperLink(s.SheetName, axis, fmt.Sprintf("%v", data), "External")
+	}
+	return err
 }
 
 // AddData 遍历slice，导出数据

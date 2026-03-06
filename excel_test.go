@@ -13,6 +13,7 @@ type foo struct {
 	Age     *int            `excel:"年龄,allowempty" json:"age"`
 	Height  int             `excel:"身高,font{color:ff0000 size:16}" json:"height"`
 	Holiday map[string]bool `excel:"假期,expand:regexp(^\\d{4}-\\d{2}-\\d{2}$)" json:"holiday"`
+	Url     string          `excel:"网址,link" json:"url"`
 }
 
 func (f foo) GatherHeaderRows() int {
@@ -55,6 +56,7 @@ func TestNewExcel(t *testing.T) {
 			"2022-01-28": true,
 			"2022-01-29": true,
 		},
+		Url: "https://www.douyacun.com",
 	}, &foo{
 		Name:   "o",
 		Age:    &age,
@@ -66,6 +68,7 @@ func TestNewExcel(t *testing.T) {
 			"2022-02-09": true,
 			"2022-12-09": true,
 		},
+		Url: "https://www.douyacun.com",
 	})
 
 	sheet, err := excel.AddSheet("hello")
@@ -82,7 +85,6 @@ func TestNewExcel(t *testing.T) {
 	}
 	dir, _ := os.Getwd()
 	fmt.Println("当前路径：", dir)
-	return
 }
 
 func TestParseExcelHeaderTag(t *testing.T) {
